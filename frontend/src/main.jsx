@@ -60,11 +60,11 @@ function stripMarks(value) {
 
 function printable(value) {
   if (value === null || value === undefined || value === '') return 'Chưa rõ';
-  return String(value);
+  return String(value).normalize('NFC');
 }
 
 function compact(value) {
-  return value ? String(value).trim() : '';
+  return value ? String(value).normalize('NFC').trim() : '';
 }
 
 function normalizeUnitForDisplay(value) {
@@ -157,6 +157,15 @@ function uniqueOptions(records, field, limit = 500) {
   return Array.from(values).sort((a, b) => a.localeCompare(b, 'vi')).slice(0, limit);
 }
 
+function normalizeRecordText(record) {
+  return Object.fromEntries(
+    Object.entries(record).map(([key, value]) => [
+      key,
+      typeof value === 'string' ? value.normalize('NFC') : value,
+    ])
+  );
+}
+
 function buildSearchText(record) {
   return stripMarks([
     record.full_name,
@@ -206,12 +215,15 @@ function useMartyrs() {
         if (!mounted) return;
         const visible = records
           .filter((record) => !record.public_status || record.public_status === 'published')
-          .map((record) => ({
-            ...record,
-            _unitDisplay: normalizeUnitForDisplay(record.unit),
-            _unitKey: unitKey(record.unit),
-            _searchText: buildSearchText(record),
-          }));
+          .map((record) => {
+            const normalized = normalizeRecordText(record);
+            return {
+              ...normalized,
+              _unitDisplay: normalizeUnitForDisplay(normalized.unit),
+              _unitKey: unitKey(normalized.unit),
+              _searchText: buildSearchText(normalized),
+            };
+          });
         setState({ status: 'ready', records: visible, source, error: '' });
       })
       .catch((error) => {

@@ -905,11 +905,11 @@ button:focus-visible {
   position: relative;
   z-index: 1;
   color: #12233d;
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: Inter, "Segoe UI", Arial, sans-serif;
   font-size: clamp(1.6rem, 3vw, 2.4rem);
-  font-weight: 700;
+  font-weight: 850;
   margin: 0;
-  line-height: 1.1;
+  line-height: 1.14;
 }
 
 .soldierHeader .eyebrow {
