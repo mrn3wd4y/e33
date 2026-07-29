@@ -4,6 +4,24 @@ import './styles.css';
 
 const DIRECTUS_URL = import.meta.env.VITE_DIRECTUS_URL || '';
 const PAGE_SIZE = 24;
+const INITIAL_FILTERS = {
+  query: '',
+  hometownQuery: '',
+  deathPlaceQuery: '',
+  province: '',
+  unit: '',
+  birthYear: '',
+  deathYear: '',
+};
+const ADVANCED_FILTER_KEYS = ['hometownQuery', 'deathPlaceQuery', 'province', 'unit', 'birthYear', 'deathYear'];
+const FILTER_LABELS = {
+  hometownQuery: 'Quê quán',
+  deathPlaceQuery: 'Nơi hy sinh',
+  province: 'Tỉnh',
+  unit: 'Đơn vị',
+  birthYear: 'Năm sinh',
+  deathYear: 'Hy sinh',
+};
 
 const publicFields = [
   'id',
@@ -195,7 +213,7 @@ function applyFilters(records, filters) {
   const hometownQuery = stripMarks(filters.hometownQuery);
   const deathPlaceQuery = stripMarks(filters.deathPlaceQuery);
   return records.filter((record) => {
-    if (query && !stripMarks(record.full_name).includes(query)) return false;
+    if (query && !record._searchText.includes(query)) return false;
     if (hometownQuery && !stripMarks(record.hometown_raw).includes(hometownQuery)) return false;
     if (deathPlaceQuery && !stripMarks(record.initial_burial_place).includes(deathPlaceQuery)) return false;
     if (filters.province && record.province !== filters.province) return false;
@@ -203,6 +221,34 @@ function applyFilters(records, filters) {
     if (filters.birthYear && String(record.birth_year || '') !== filters.birthYear) return false;
     if (filters.deathYear && String(record.death_year || '') !== filters.deathYear) return false;
     return true;
+  });
+}
+
+function countAdvancedFilters(filters) {
+  return ADVANCED_FILTER_KEYS.filter((key) => compact(filters[key])).length;
+}
+
+function activeFilterChips(filters) {
+  return ADVANCED_FILTER_KEYS
+    .filter((key) => compact(filters[key]))
+    .map((key) => ({ key, label: FILTER_LABELS[key], value: filters[key] }));
+}
+
+function getSortValue(record, key) {
+  if (key === 'name') return stripMarks(record.full_name);
+  if (key === 'birthYear') return Number(record.birth_year) || Number(record.birth_year_raw) || 0;
+  if (key === 'deathDate') return Number(record.death_year) || Number(String(record.death_date_raw || '').match(/\d{4}/)?.[0]) || 0;
+  return '';
+}
+
+function sortRecords(records, sort) {
+  if (!sort.key) return records;
+  const direction = sort.direction === 'asc' ? 1 : -1;
+  return [...records].sort((a, b) => {
+    const aValue = getSortValue(a, sort.key);
+    const bValue = getSortValue(b, sort.key);
+    if (typeof aValue === 'number' && typeof bValue === 'number') return (aValue - bValue) * direction;
+    return String(aValue).localeCompare(String(bValue), 'vi') * direction;
   });
 }
 
@@ -240,17 +286,12 @@ function useRoute() {
 }
 
 function App() {
-  const { status, records, source, error } = useMartyrs();
+  const { status, records, error } = useMartyrs();
   const route = useRoute();
-  const [filters, setFilters] = useState({
-    query: '',
-    hometownQuery: '',
-    deathPlaceQuery: '',
-    province: '',
-    unit: '',
-    birthYear: '',
-    deathYear: '',
-  });
+  const [filters, setFilters] = useState(INITIAL_FILTERS);
+  const [draftFilters, setDraftFilters] = useState(INITIAL_FILTERS);
+  const [filterSheetOpen, setFilterSheetOpen] = useState(false);
+  const [sort, setSort] = useState({ key: '', direction: 'asc' });
   const [page, setPage] = useState(1);
 
   const selected = useMemo(
@@ -266,9 +307,13 @@ function App() {
   }), [records]);
 
   const filtered = useMemo(() => applyFilters(records, filters), [records, filters]);
+  const sortedRecords = useMemo(() => sortRecords(filtered, sort), [filtered, sort]);
+  const draftCount = useMemo(() => applyFilters(records, draftFilters).length, [records, draftFilters]);
+  const advancedCount = countAdvancedFilters(filters);
+  const filterChips = activeFilterChips(filters);
   const stats = useMemo(() => calcStats(records), [records]);
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const pageRecords = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const totalPages = Math.max(1, Math.ceil(sortedRecords.length / PAGE_SIZE));
+  const pageRecords = sortedRecords.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   useEffect(() => {
     setPage(1);
@@ -278,16 +323,47 @@ function App() {
     if (page > totalPages) setPage(totalPages);
   }, [page, totalPages]);
 
+  useEffect(() => {
+    if (!filterSheetOpen) return undefined;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [filterSheetOpen]);
+
   const updateFilter = (key, value) => setFilters((current) => ({ ...current, [key]: value }));
-  const resetFilters = () => setFilters({
-    query: '',
-    hometownQuery: '',
-    deathPlaceQuery: '',
-    province: '',
-    unit: '',
-    birthYear: '',
-    deathYear: '',
-  });
+  const updateDraftFilter = (key, value) => setDraftFilters((current) => ({ ...current, [key]: value }));
+  const resetFilters = () => setFilters(INITIAL_FILTERS);
+  const openFilterSheet = () => {
+    setDraftFilters(filters);
+    setFilterSheetOpen(true);
+  };
+  const applyDraftFilters = () => {
+    setFilters(draftFilters);
+    setFilterSheetOpen(false);
+  };
+  const clearDraftAdvancedFilters = () => {
+    setDraftFilters((current) => ({
+      ...current,
+      hometownQuery: '',
+      deathPlaceQuery: '',
+      province: '',
+      unit: '',
+      birthYear: '',
+      deathYear: '',
+    }));
+  };
+  const removeFilterChip = (key) => {
+    setFilters((current) => ({ ...current, [key]: '' }));
+  };
+  const toggleSort = (key) => {
+    setSort((current) => (
+      current.key === key
+        ? { key, direction: current.direction === 'asc' ? 'desc' : 'asc' }
+        : { key, direction: 'asc' }
+    ));
+  };
   const openDetail = (record) => {
     window.location.hash = `/liet-si/${encodeURIComponent(record.slug)}`;
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -317,28 +393,8 @@ function App() {
 
   return (
     <SiteShell records={records} stats={stats}>
-      <section className="pageIntro" id="about">
-        <div>
-          <p className="eyebrow">Cơ sở dữ liệu tưởng niệm</p>
-          <h2>Tra cứu thông tin liệt sĩ Trung đoàn 33</h2>
-        </div>
-        <p>
-          Dữ liệu được tổng hợp từ danh sách hiện có, phục vụ tra cứu họ tên, quê quán,
-          năm sinh, ngày hi sinh và nơi hi sinh.
-        </p>
-      </section>
-
       <section className="workspace" id="records">
         <section className="content">
-          <div className="resultHeader">
-            <div id="data">
-              <p className="eyebrow">{source === 'directus' ? 'Directus API' : 'Dữ liệu nội bộ'}</p>
-              <h2>Kết quả tìm kiếm</h2>
-              <span className="resultCount">{filtered.length.toLocaleString('vi-VN')} hồ sơ</span>
-            </div>
-            <Pagination page={page} totalPages={totalPages} setPage={setPage} />
-          </div>
-
           {status === 'loading' && <div className="notice">Đang tải dữ liệu...</div>}
           {status === 'error' && <div className="notice error">Không tải được dữ liệu: {error}</div>}
           {status === 'ready' && filtered.length === 0 && (
@@ -347,16 +403,48 @@ function App() {
             </div>
           )}
 
-          <div className="filterPanel" aria-label="Bộ lọc tra cứu">
+          <div className="mobileFilterBar" aria-label="Tìm kiếm và lọc nhanh">
+            <label className="mobileSearchField">
+              <span>Tìm kiếm</span>
+              <input
+                id="search"
+                value={filters.query}
+                onChange={(event) => updateFilter('query', event.target.value)}
+                placeholder="Nhập tên, quê quán, đơn vị..."
+                autoComplete="off"
+              />
+            </label>
+            <button className="mobileFilterBtn" type="button" onClick={openFilterSheet}>
+              <span aria-hidden="true">≡</span>
+              Bộ lọc{advancedCount > 0 ? ` (${advancedCount})` : ''}
+            </button>
+            {filterChips.length > 0 && (
+              <div className="filterChips" aria-label="Bộ lọc đang chọn">
+                {filterChips.map((chip) => (
+                  <button
+                    className="filterChip"
+                    type="button"
+                    key={chip.key}
+                    onClick={() => removeFilterChip(chip.key)}
+                    aria-label={`Xóa bộ lọc ${chip.label}: ${chip.value}`}
+                  >
+                    <span>{chip.label}: {chip.value}</span>
+                    <b aria-hidden="true">×</b>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="filterPanel desktopFilterPanel" aria-label="Bộ lọc tra cứu">
             <h3>Thông tin liệt sĩ</h3>
             <div className="filterGrid">
               <label className="searchField compactSelect nameField">
-                <span>Họ tên liệt sĩ</span>
+                <span>Từ khóa</span>
                 <input
-                  id="search"
                   value={filters.query}
                   onChange={(event) => updateFilter('query', event.target.value)}
-                  placeholder="Nhập tên liệt sĩ..."
+                  placeholder="Nhập tên, quê quán, đơn vị..."
                   autoComplete="off"
                 />
               </label>
@@ -371,7 +459,7 @@ function App() {
                 />
               </label>
               <Select label="Tỉnh quê quán" value={filters.province} options={options.provinces} onChange={(value) => updateFilter('province', value)} compact />
-              <Select label="Năm hi sinh" value={filters.deathYear} options={options.years} onChange={(value) => updateFilter('deathYear', value)} compact />
+              <Select label="Năm hy sinh" value={filters.deathYear} options={options.years} onChange={(value) => updateFilter('deathYear', value)} compact />
               <label className="searchField compactSelect deathPlaceField">
                 <span>Nơi hy sinh</span>
                 <input
@@ -382,8 +470,63 @@ function App() {
                 />
               </label>
               <Select label="Đơn vị" value={filters.unit} options={options.units} onChange={(value) => updateFilter('unit', value)} compact />
-              <button className="plainBtn toolbarClear" onClick={resetFilters}>Tìm lại</button>
+              <div className="filterActions">
+                <button className="plainBtn toolbarSearch" type="button">Tìm kiếm</button>
+                <button className="filterResetBtn" type="button" onClick={resetFilters}>Đặt lại</button>
+              </div>
             </div>
+          </div>
+
+          {filterSheetOpen && (
+            <div className="filterSheetLayer open">
+              <button className="sheetScrim" type="button" aria-label="Đóng bộ lọc" onClick={() => setFilterSheetOpen(false)} />
+              <section className="filterSheet" role="dialog" aria-modal="true" aria-labelledby="filterSheetTitle">
+                <div className="sheetHandle" aria-hidden="true" />
+                <header className="sheetHeader">
+                  <h3 id="filterSheetTitle">Bộ lọc nâng cao</h3>
+                  <button className="sheetClose" type="button" onClick={() => setFilterSheetOpen(false)} aria-label="Đóng bộ lọc">×</button>
+                </header>
+
+                <div className="sheetBody">
+                  <section className="sheetGroup">
+                    <h4>Tiêu chí phổ biến</h4>
+                    <Select label="Tỉnh quê quán" value={draftFilters.province} options={options.provinces} onChange={(value) => updateDraftFilter('province', value)} compact />
+                    <Select label="Năm hy sinh" value={draftFilters.deathYear} options={options.years} onChange={(value) => updateDraftFilter('deathYear', value)} compact />
+                  </section>
+
+                  <section className="sheetGroup">
+                    <h4>Tiêu chí chi tiết</h4>
+                    <Select label="Năm sinh" value={draftFilters.birthYear} options={options.birthYears} onChange={(value) => updateDraftFilter('birthYear', value)} compact />
+                    <label className="searchField compactSelect">
+                      <span>Nơi hy sinh</span>
+                      <input
+                        value={draftFilters.deathPlaceQuery}
+                        onChange={(event) => updateDraftFilter('deathPlaceQuery', event.target.value)}
+                        placeholder="Nhập nơi hy sinh..."
+                        autoComplete="off"
+                      />
+                    </label>
+                    <SearchableFilterInput
+                      label="Đơn vị"
+                      value={draftFilters.unit}
+                      options={options.units}
+                      onChange={(value) => updateDraftFilter('unit', value)}
+                    />
+                  </section>
+                </div>
+
+                <footer className="sheetActions">
+                  <button className="sheetReset" type="button" onClick={clearDraftAdvancedFilters}>Xóa lọc</button>
+                  <button className="sheetApply" type="button" onClick={applyDraftFilters}>
+                    Áp dụng ({draftCount.toLocaleString('vi-VN')})
+                  </button>
+                </footer>
+              </section>
+            </div>
+          )}
+
+          <div className="tableStatus">
+            Tìm thấy <strong>{filtered.length.toLocaleString('vi-VN')}</strong> hồ sơ liệt sĩ Trung đoàn 33
           </div>
 
           <div className="tablePanel">
@@ -392,11 +535,23 @@ function App() {
                 <thead>
                   <tr>
                     <th>STT</th>
-                    <th>Họ tên</th>
-                    <th>Năm sinh</th>
+                    <th>
+                      <button className="sortHeaderBtn" type="button" onClick={() => toggleSort('name')}>
+                        Họ và tên <span>{sort.key === 'name' ? (sort.direction === 'asc' ? '▲' : '▼') : '↕'}</span>
+                      </button>
+                    </th>
+                    <th>
+                      <button className="sortHeaderBtn" type="button" onClick={() => toggleSort('birthYear')}>
+                        Năm sinh <span>{sort.key === 'birthYear' ? (sort.direction === 'asc' ? '▲' : '▼') : '↕'}</span>
+                      </button>
+                    </th>
                     <th>Quê quán</th>
-                    <th>Ngày hy sinh</th>
-                    <th>Nơi hi sinh</th>
+                    <th>
+                      <button className="sortHeaderBtn" type="button" onClick={() => toggleSort('deathDate')}>
+                        Ngày hy sinh <span>{sort.key === 'deathDate' ? (sort.direction === 'asc' ? '▲' : '▼') : '↕'}</span>
+                      </button>
+                    </th>
+                    <th>Nơi hy sinh</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -425,9 +580,42 @@ function App() {
 }
 
 function SiteShell({ children, stats }) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [headerHidden, setHeaderHidden] = useState(false);
+  const route = useRoute();
+
+  useEffect(() => {
+    let lastY = window.scrollY;
+    const onScroll = () => {
+      const currentY = window.scrollY;
+      const isMobile = window.matchMedia('(max-width: 680px)').matches;
+      setHeaderHidden(isMobile && currentY > 96 && currentY > lastY + 8);
+      lastY = currentY;
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  useEffect(() => {
+    if (!menuOpen) return undefined;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [menuOpen]);
+
+  const closeMenu = () => setMenuOpen(false);
+  const navItems = [
+    { href: '#records', label: 'Tra cứu', active: route.page === 'list' || route.page === 'detail' },
+    { href: '#data', label: 'Dữ liệu', active: false },
+    { href: '#about', label: 'Giới thiệu', active: false },
+    { href: '#/lien-lac', label: 'Liên lạc', active: route.page === 'contact' },
+  ];
+
   return (
     <main>
-      <header className="topbar">
+      <header className={headerHidden ? 'topbar topbarHidden' : 'topbar'}>
         <a className="brand" href="#records">
           <div className="brandMark">E33</div>
           <div>
@@ -437,23 +625,47 @@ function SiteShell({ children, stats }) {
           </div>
         </a>
         <nav className="mainNav" aria-label="Điều hướng chính">
-          <a href="#records">Tra cứu</a>
+          <a className={route.page === 'list' || route.page === 'detail' ? 'active' : ''} href="#records">Tra cứu</a>
           <a href="#data">Dữ liệu</a>
           <a href="#about">Giới thiệu</a>
-          <a href="#/lien-lac">Liên lạc</a>
+          <a className={route.page === 'contact' ? 'active' : ''} href="#/lien-lac">Liên lạc</a>
         </nav>
         <div className="summaryText">{stats.total.toLocaleString('vi-VN')} hồ sơ</div>
+        <button className="menuToggle" type="button" onClick={() => setMenuOpen(true)} aria-label="Mở menu">☰</button>
       </header>
 
-      {children}
-
-      <footer className="siteFooter">
-        <div>
-          <strong>Website tra cứu liệt sĩ Trung đoàn 33</strong>
-          <p>Lưu trữ và hỗ trợ tra cứu thông tin phục vụ thân nhân, đồng đội và người quan tâm.</p>
+      {menuOpen && (
+        <div className="mobileMenuLayer">
+          <button className="mobileMenuScrim" type="button" aria-label="Đóng menu" onClick={closeMenu} />
+          <aside className="mobileMenuDrawer" role="dialog" aria-modal="true" aria-labelledby="mobileMenuTitle">
+            <header className="mobileMenuHead">
+              <div className="mobileMenuBrand">
+                <div className="mobileMenuLogo">E33</div>
+                <div>
+                  <h2 id="mobileMenuTitle">TRUNG ĐOÀN 33</h2>
+                  <p>Cổng thông tin Tra cứu Liệt sĩ</p>
+                </div>
+              </div>
+              <button className="mobileMenuClose" type="button" onClick={closeMenu} aria-label="Đóng menu">×</button>
+            </header>
+            <nav className="mobileMenuNav" aria-label="Menu di động">
+              {navItems.map((item, index) => (
+                <a className={item.active ? 'active' : ''} href={item.href} onClick={closeMenu} key={item.href}>
+                  <span className="menuLabel">{item.label}</span>
+                  <span className="menuNumber">{String(index + 1).padStart(2, '0')}</span>
+                </a>
+              ))}
+            </nav>
+            <footer className="mobileMenuMeta">
+              <span>Hồ sơ</span>
+              <strong>{stats.total.toLocaleString('vi-VN')}</strong>
+              <span>Tưởng nhớ - Tri ân - Lưu dấu</span>
+            </footer>
+          </aside>
         </div>
+      )}
 
-      </footer>
+      {children}
     </main>
   );
 }
@@ -471,6 +683,26 @@ function Select({ label, value, options, onChange, compact: isCompact }) {
           return <option key={item.value} value={item.value}>{item.label}</option>;
         })}
       </select>
+    </label>
+  );
+}
+
+function SearchableFilterInput({ label, value, options, onChange }) {
+  return (
+    <label className="searchField compactSelect">
+      <span>{label}</span>
+      <input
+        list="unit-filter-options"
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        placeholder="Nhập hoặc chọn đơn vị..."
+        autoComplete="off"
+      />
+      <datalist id="unit-filter-options">
+        {options.map((option) => (
+          <option value={option} key={option} />
+        ))}
+      </datalist>
     </label>
   );
 }
@@ -495,6 +727,8 @@ function Pagination({ page, totalPages, setPage }) {
 }
 
 function RecordRow({ index, record, onOpen }) {
+  const deathPlace = printable(record.initial_burial_place);
+  const deathPlaceMissing = isMissing(record.initial_burial_place);
   return (
     <tr>
       <td className="stt" data-label="STT">{index}</td>
@@ -504,7 +738,7 @@ function RecordRow({ index, record, onOpen }) {
       <td data-label="Năm sinh">{printable(record.birth_year_raw || record.birth_year)}</td>
       <td data-label="Quê quán">{printable(record.hometown_raw)}</td>
       <td data-label="Ngày hy sinh">{printable(record.death_date_raw || record.death_year)}</td>
-      <td data-label="Nơi hi sinh">{printable(record.initial_burial_place)}</td>
+      <td className={deathPlaceMissing ? 'mutedCell' : ''} data-label="Nơi hy sinh">{deathPlace}</td>
     </tr>
   );
 }
@@ -671,37 +905,11 @@ function formatPhone(phone) {
 
 function ContactPage() {
   const [accepted, setAccepted] = useState(() => sessionStorage.getItem('contact_accepted') === '1');
-  const [query, setQuery] = useState('');
-  const [copied, setCopied] = useState('');
 
   const acceptNotice = () => {
     sessionStorage.setItem('contact_accepted', '1');
     setAccepted(true);
   };
-
-  const copyPhone = async (phone) => {
-    try {
-      await navigator.clipboard.writeText(phone);
-      setCopied(phone);
-      window.setTimeout(() => setCopied(''), 1600);
-    } catch { /* noop */ }
-  };
-
-  const groups = useMemo(() => {
-    const needle = stripMarks(query);
-    if (!needle) return CONTACT_GROUPS;
-    return CONTACT_GROUPS
-      .map((group) => ({
-        ...group,
-        people: group.people.filter((p) =>
-          stripMarks(`${p.name} ${p.role}`).includes(needle)
-          || p.phone.includes(needle.replace(/\D/g, ''))),
-      }))
-      .filter((group) => group.people.length > 0);
-  }, [query]);
-
-  const total = CONTACT_GROUPS.reduce((s, g) => s + g.people.length, 0);
-  const shown = groups.reduce((s, g) => s + g.people.length, 0);
 
   return (
     <section className="contactPage workspace">
@@ -709,7 +917,7 @@ function ContactPage() {
         <p className="eyebrow">Thông tin liên lạc</p>
         <h2>Hỗ trợ xác minh thông tin liệt sĩ</h2>
         <p className="contactDesc">
-          Danh sách số điện thoại phục vụ xác minh thông tin liệt sĩ E33 và các đơn vị khác hi sinh tại
+          Danh sách số điện thoại phục vụ xác minh thông tin liệt sĩ E33 và các đơn vị khác hy sinh tại
           Phước Tuy, Bình Tuy, Long Khánh, Phước Long, Biên Hoà (bản đồ 1956–1975). Nay là
           Bà Rịa, Đồng Nai, Bình Thuận, Lâm Đồng, Bình Phước.
         </p>
@@ -717,26 +925,7 @@ function ContactPage() {
 
       {accepted && (
         <>
-          <div className="contactToolbar">
-            <label className="searchField contactSearch">
-              <span>Tìm theo tên, đơn vị hoặc số điện thoại</span>
-              <input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Ví dụ: quản trang, D7, 0916..."
-                autoComplete="off"
-              />
-            </label>
-            <span className="contactCount">
-              {shown === total ? `${total} đầu mối` : `${shown} / ${total} đầu mối`}
-            </span>
-          </div>
-
-          {groups.length === 0 && (
-            <div className="notice">Không tìm thấy đầu mối phù hợp. Thử bớt từ khoá.</div>
-          )}
-
-          {groups.map((group) => (
+          {CONTACT_GROUPS.map((group) => (
             <section className="contactGroup" key={group.id}>
               <div className="contactGroupHead">
                 <h3>{group.title}</h3>
@@ -745,21 +934,13 @@ function ContactPage() {
               <ul className="contactList">
                 {group.people.map((person) => (
                   <li className="contactRow" key={`${group.id}-${person.phone}-${person.name}`}>
-                    <span className="contactAvatar" aria-hidden="true">{person.name.slice(-1).toUpperCase()}</span>
+                    <span className="contactAvatar" aria-hidden="true">{group.id === 'nguon-tin' ? '📺' : '🎖️'}</span>
                     <span className="contactWho">
                       <strong>{person.name}</strong>
-                      <small>{person.role}</small>
+                      <small>{person.role} <span aria-hidden="true">•</span> {formatPhone(person.phone)}</small>
                     </span>
                     <span className="contactActions">
-                      <a className="phoneLink" href={`tel:${person.phone}`}>{formatPhone(person.phone)}</a>
-                      <button
-                        type="button"
-                        className="copyBtn"
-                        onClick={() => copyPhone(person.phone)}
-                        aria-label={`Sao chép số ${person.name}`}
-                      >
-                        {copied === person.phone ? 'Đã chép' : 'Chép'}
-                      </button>
+                      <a className="phoneLink" href={`tel:${person.phone}`} aria-label={`Gọi ${person.name}`}>📞 Gọi</a>
                     </span>
                   </li>
                 ))}
