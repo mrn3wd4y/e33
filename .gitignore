@@ -1,0 +1,8 @@
+.env
+node_modules/
+.pnpm-store/
+dist/
+*.pid
+data/normalized/
+data/reports/
+*.log

@@ -1,0 +1,15 @@
+{
+  "name": "e33-martyrs-backend",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Backend/infra scripts cho website tra cuu liet si Trung doan 33",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "schema": "node -r ./scripts/load-env.js scripts/apply-schema.js",
+    "import": "node -r ./scripts/load-env.js scripts/import-martyrs.js",
+    "import:dry": "node -r ./scripts/load-env.js scripts/import-martyrs.js --dry-run"
+  }
+}

@@ -1,0 +1,457 @@
+<title>Hồ sơ liệt sĩ — Bùi Sĩ Nho</title>
+<style>
+  /* ============================================================
+     Ho so liet si E33 - Redesign trang chi tiet (mockup)
+     Tone: trang nghiem, tri an. Navy sau / xam am / trang / do son.
+     Motif: ngoi sao nam canh (bia da tuong niem).
+     ============================================================ */
+  :root {
+    --navy-900: #0F1830;
+    --navy-800: #16233F;
+    --navy-700: #24365B;
+    --ink:      #1C2536;
+    --paper:    #F1EEE7;
+    --paper-2:  #E9E5DC;
+    --card:     #FFFFFF;
+    --line:     #E2DCD1;
+    --gray-600: #6B6458;   /* nhan - xam am */
+    --gray-500: #857D70;
+    --gray-400: #ABA396;
+    --empty:    #B4AC9F;   /* gia tri trong - italic */
+    --red-700:  #862017;   /* do son dam */
+    --red-600:  #A02A1D;
+    --gold:     #B08A3E;
+    --shadow-sm: 0 1px 2px rgba(16,24,48,.05), 0 2px 6px rgba(16,24,48,.05);
+    --shadow-md: 0 6px 22px rgba(16,24,48,.09), 0 2px 6px rgba(16,24,48,.06);
+    --serif: "Palatino Linotype","Iowan Old Style","Constantia",Georgia,"Times New Roman",serif;
+    --sans: "Segoe UI",system-ui,-apple-system,Roboto,"Helvetica Neue",Arial,sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+
+  .memorial {
+    font-family: var(--sans);
+    color: var(--ink);
+    background:
+      radial-gradient(1200px 500px at 82% -8%, #F6F3EC 0%, rgba(246,243,236,0) 60%),
+      var(--paper);
+    min-height: 100vh;
+    width: 100%;
+    padding: 0 0 48px;
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.5;
+  }
+
+  /* ---------- Header ---------- */
+  .m-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 18px clamp(20px, 4vw, 56px);
+    background: linear-gradient(180deg, var(--navy-800), var(--navy-900));
+    color: #EFECE4;
+    border-bottom: 3px solid var(--red-700);
+  }
+  .m-emblem {
+    width: 46px; height: 46px; flex: 0 0 auto;
+    display: grid; place-items: center;
+    border: 1.5px solid rgba(206,177,110,.55);
+    border-radius: 50%;
+    background: radial-gradient(circle at 50% 38%, #223763, #0E1730);
+  }
+  .m-emblem svg { width: 26px; height: 26px; }
+  .m-brand { display: flex; flex-direction: column; line-height: 1.15; }
+  .m-brand .name {
+    font-family: var(--serif);
+    font-size: 20px; font-weight: 700; letter-spacing: .06em;
+    color: #F4EFE4;
+  }
+  .m-brand .slogan {
+    font-size: 11px; letter-spacing: .34em; font-weight: 600;
+    color: var(--gold); margin-top: 3px;
+  }
+  .m-header .spacer { flex: 1; }
+  .m-header .doc-id {
+    font-size: 11.5px; letter-spacing: .18em; color: #9FA9BE;
+    text-transform: uppercase;
+  }
+
+  /* ---------- Shell / two-column grid ---------- */
+  .m-shell {
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 26px clamp(20px, 4vw, 56px) 0;
+  }
+  .m-back {
+    display: inline-flex; align-items: center; gap: 7px;
+    font-size: 13px; font-weight: 600; color: var(--navy-700);
+    text-decoration: none; letter-spacing: .02em;
+    padding: 6px 2px; margin-bottom: 18px;
+  }
+  .m-back:hover { color: var(--red-700); }
+
+  .m-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.68fr) minmax(0, 1fr);
+    gap: clamp(20px, 2.4vw, 34px);
+    align-items: start;
+  }
+
+  /* ---------- Left column ---------- */
+  .m-main { position: relative; }
+  .m-watermark {
+    position: absolute; top: 96px; right: -14px;
+    width: 340px; height: 340px; z-index: 0;
+    color: var(--navy-800); opacity: .045; pointer-events: none;
+  }
+  .m-main > * { position: relative; z-index: 1; }
+
+  .m-name {
+    font-family: var(--serif);
+    font-size: clamp(38px, 5vw, 58px);
+    font-weight: 700; line-height: 1.02;
+    color: var(--navy-900); letter-spacing: .005em;
+    margin: 2px 0 0;
+  }
+  .m-rule {
+    display: flex; align-items: center; gap: 12px;
+    margin: 16px 0 20px;
+  }
+  .m-rule .seg { height: 2px; background: var(--red-700); border-radius: 2px; }
+  .m-rule .seg.a { width: 46px; }
+  .m-rule .seg.b { flex: 1; background: linear-gradient(90deg, var(--red-700), rgba(134,32,23,0)); }
+  .m-rule svg { width: 16px; height: 16px; color: var(--red-700); flex: 0 0 auto; }
+
+  .m-badges { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 26px; }
+  .m-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: 999px; padding: 8px 15px 8px 12px;
+    font-size: 13.5px; font-weight: 600; color: var(--ink);
+    box-shadow: var(--shadow-sm);
+  }
+  .m-badge svg { width: 16px; height: 16px; color: var(--navy-700); }
+  .m-badge.accent svg { color: var(--red-600); }
+  .m-badge .lbl { color: var(--gray-600); font-weight: 600; }
+
+  /* ---------- Cards ---------- */
+  .m-card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    box-shadow: var(--shadow-md);
+    padding: 24px clamp(20px, 2.2vw, 30px) 26px;
+    margin-bottom: 22px;
+  }
+  .m-card-head {
+    display: flex; align-items: center; gap: 10px;
+    margin: 0 0 20px;
+  }
+  .m-card-head .star { width: 15px; height: 15px; color: var(--red-700); flex: 0 0 auto; }
+  .m-card-title {
+    font-size: 13px; font-weight: 800; letter-spacing: .16em;
+    text-transform: uppercase; color: var(--navy-800);
+  }
+  .m-card-head .tail { flex: 1; height: 1px; background: var(--line); }
+
+  .m-dl {
+    display: grid; grid-template-columns: repeat(2, minmax(0,1fr));
+    gap: 2px 34px;
+  }
+  .m-field {
+    padding: 13px 2px; border-bottom: 1px solid var(--line);
+  }
+  .m-field.span { grid-column: 1 / -1; }
+  .m-field .k {
+    font-size: 11.5px; font-weight: 700; letter-spacing: .07em;
+    color: var(--gray-600); text-transform: uppercase; margin-bottom: 5px;
+  }
+  .m-field .v { font-size: 16px; font-weight: 700; color: var(--ink); }
+  .m-field .v.empty {
+    font-weight: 400; font-style: italic; color: var(--empty);
+    padding: 3px 0; display: inline-block;
+  }
+
+  /* Than nhan card: nhan hoa gia tri trong */
+  .m-card.subtle .m-field { padding: 15px 2px; }
+
+  /* ---------- Right sidebar ---------- */
+  .m-side { display: flex; flex-direction: column; gap: 22px; }
+  .m-panel {
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: 14px; box-shadow: var(--shadow-md);
+    overflow: hidden;
+  }
+  .m-panel-head {
+    display: flex; align-items: center; gap: 9px;
+    padding: 16px 20px;
+    background: linear-gradient(180deg, var(--navy-800), var(--navy-900));
+    color: #F1ECE2;
+  }
+  .m-panel-head svg { width: 16px; height: 16px; color: var(--gold); }
+  .m-panel-head .t {
+    font-size: 12.5px; font-weight: 800; letter-spacing: .15em; text-transform: uppercase;
+  }
+  .m-panel-body { padding: 16px; }
+
+  .m-actions { display: flex; flex-direction: column; gap: 10px; }
+  .m-btn {
+    display: flex; align-items: center; gap: 12px;
+    width: 100%; text-align: left;
+    padding: 13px 16px; border-radius: 10px;
+    font-family: var(--sans); font-size: 13px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .045em; cursor: pointer;
+    border: 1px solid var(--line); background: #FBFAF7; color: var(--navy-800);
+    transition: transform .08s ease, box-shadow .15s ease, background .15s ease;
+  }
+  .m-btn svg { width: 18px; height: 18px; flex: 0 0 auto; }
+  .m-btn:hover { transform: translateY(-1px); box-shadow: var(--shadow-sm); }
+  .m-btn:focus-visible { outline: 2px solid var(--navy-700); outline-offset: 2px; }
+  .m-btn.primary {
+    background: linear-gradient(180deg, var(--red-600), var(--red-700));
+    color: #FBF3EE; border-color: var(--red-700);
+    box-shadow: 0 6px 16px rgba(134,32,23,.22);
+  }
+  .m-btn.primary svg { color: #F6D9CB; }
+  .m-btn.primary:hover { box-shadow: 0 9px 20px rgba(134,32,23,.30); }
+
+  /* Related lists */
+  .m-group + .m-group { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line); }
+  .m-group-title {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 12.5px; font-weight: 800; color: var(--navy-800);
+    margin-bottom: 11px; letter-spacing: .02em;
+  }
+  .m-group-title .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--red-700); flex: 0 0 auto; }
+  .m-group-title .count {
+    margin-left: auto; font-size: 11px; font-weight: 700; color: var(--gray-500);
+    background: var(--paper-2); border-radius: 999px; padding: 2px 9px; letter-spacing: 0;
+  }
+
+  .m-person {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px; border: 1px solid var(--line); border-radius: 10px;
+    background: #FCFBF8; margin-bottom: 8px; cursor: pointer;
+    transition: border-color .15s ease, box-shadow .15s ease;
+  }
+  .m-person:last-child { margin-bottom: 0; }
+  .m-person:hover { border-color: #CFC7B8; box-shadow: var(--shadow-sm); }
+  .m-avatar {
+    width: 38px; height: 38px; flex: 0 0 auto; border-radius: 9px;
+    display: grid; place-items: center;
+    background: var(--navy-800); color: #C9D2E4;
+  }
+  .m-avatar svg { width: 21px; height: 21px; }
+  .m-person .info { min-width: 0; }
+  .m-person .pname {
+    font-size: 14px; font-weight: 700; color: var(--ink);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .m-person .pmeta { font-size: 12px; color: var(--gray-600); margin-top: 2px; }
+  .m-person .pmeta b { color: var(--navy-700); font-weight: 700; }
+  .m-person .phome { font-size: 11.5px; color: var(--gray-500); margin-top: 1px; }
+
+  .m-empty {
+    font-size: 13px; font-style: italic; color: var(--empty);
+    padding: 12px 10px; border: 1px dashed var(--line); border-radius: 10px;
+    background: #FCFBF8; text-align: center;
+  }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width: 880px) {
+    .m-grid { grid-template-columns: 1fr; }
+    .m-watermark { display: none; }
+    .m-dl { grid-template-columns: 1fr; }
+    .m-header .doc-id { display: none; }
+  }
+</style>
+
+<div class="memorial">
+
+  <!-- ===== Header ===== -->
+  <header class="m-header">
+    <span class="m-emblem" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="#D8B45E"><path d="M12 2.4l2.62 5.85 6.38.62-4.8 4.24 1.42 6.25L12 16.98 6.38 19.6 7.8 13.35 3 9.11l6.38-.62z"/></svg>
+    </span>
+    <div class="m-brand">
+      <span class="name">TRUNG ĐOÀN 33</span>
+      <span class="slogan">TƯỞNG NHỚ - TRI ÂN - LƯU DẤU</span>
+    </div>
+    <span class="spacer"></span>
+    <span class="doc-id">Hồ sơ liệt sĩ</span>
+  </header>
+
+  <div class="m-shell">
+    <a class="m-back" href="#">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      Quay lại danh sách
+    </a>
+
+    <div class="m-grid">
+
+      <!-- ===== Left column ===== -->
+      <main class="m-main">
+        <svg class="m-watermark" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.4l2.62 5.85 6.38.62-4.8 4.24 1.42 6.25L12 16.98 6.38 19.6 7.8 13.35 3 9.11l6.38-.62z"/></svg>
+
+        <h1 class="m-name">Bùi Sĩ Nho</h1>
+        <div class="m-rule" aria-hidden="true">
+          <span class="seg a"></span>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.4l2.62 5.85 6.38.62-4.8 4.24 1.42 6.25L12 16.98 6.38 19.6 7.8 13.35 3 9.11l6.38-.62z"/></svg>
+          <span class="seg b"></span>
+        </div>
+
+        <div class="m-badges">
+          <span class="m-badge">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="17" rx="2"/><path d="M3 9h18M8 2.5v4M16 2.5v4"/></svg>
+            <span class="lbl">Năm sinh:</span> 1946
+          </span>
+          <span class="m-badge accent">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.4l2.62 5.85 6.38.62-4.8 4.24 1.42 6.25L12 16.98 6.38 19.6 7.8 13.35 3 9.11l6.38-.62z"/></svg>
+            <span class="lbl">Hi sinh:</span> 1965
+          </span>
+          <span class="m-badge">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5l7.5 3v5.2c0 4.7-3.2 8-7.5 9.3-4.3-1.3-7.5-4.6-7.5-9.3V5.5z"/></svg>
+            <span class="lbl">Đơn vị:</span> C14
+          </span>
+        </div>
+
+        <!-- Card 1: Thong tin liet si -->
+        <section class="m-card">
+          <div class="m-card-head">
+            <svg class="star" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.4l2.62 5.85 6.38.62-4.8 4.24 1.42 6.25L12 16.98 6.38 19.6 7.8 13.35 3 9.11l6.38-.62z"/></svg>
+            <span class="m-card-title">Thông tin liệt sĩ</span>
+            <span class="tail"></span>
+          </div>
+          <div class="m-dl">
+            <div class="m-field"><div class="k">Họ và tên</div><div class="v">Bùi Sĩ Nho</div></div>
+            <div class="m-field"><div class="k">Năm sinh</div><div class="v">1946</div></div>
+            <div class="m-field span"><div class="k">Quê quán</div><div class="v">Quảng Phong, Quảng Xương, Thanh Hóa</div></div>
+            <div class="m-field"><div class="k">Nhập ngũ</div><div class="v">02/1964</div></div>
+            <div class="m-field"><div class="k">Đơn vị</div><div class="v">C14</div></div>
+            <div class="m-field"><div class="k">Ngày hi sinh</div><div class="v">1965</div></div>
+            <div class="m-field"><div class="k">Ghi chú</div><div class="v empty">Chưa rõ</div></div>
+          </div>
+        </section>
+
+        <!-- Card 2: Than nhan hien tai -->
+        <section class="m-card subtle">
+          <div class="m-card-head">
+            <svg class="star" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 20v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="10.5" cy="7.5" r="3.5"/><path d="M19.5 20v-1.6a3.2 3.2 0 0 0-2.4-3.1"/></svg>
+            <span class="m-card-title">Thông tin thân nhân hiện tại</span>
+            <span class="tail"></span>
+          </div>
+          <div class="m-dl">
+            <div class="m-field"><div class="k">Tên thân nhân</div><div class="v empty">Chưa rõ</div></div>
+            <div class="m-field"><div class="k">Số điện thoại</div><div class="v empty">Chưa rõ</div></div>
+            <div class="m-field span"><div class="k">Điạ chỉ</div><div class="v empty">Chưa rõ</div></div>
+          </div>
+        </section>
+      </main>
+
+      <!-- ===== Right sidebar ===== -->
+      <aside class="m-side">
+
+        <!-- Tri an & hanh dong -->
+        <section class="m-panel">
+          <div class="m-panel-head">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c1.6 1.7 2.4 3.3 2.4 4.8A2.4 2.4 0 0 1 12 10a2.4 2.4 0 0 1-2.4-2.2C9.6 6.3 10.4 4.7 12 3z"/></svg>
+            <span class="t">Tri ân &amp; hành động</span>
+          </div>
+          <div class="m-panel-body">
+            <div class="m-actions">
+              <button class="m-btn primary" type="button">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.6c1.7 1.9 2.6 3.6 2.6 5.2A2.6 2.6 0 0 1 12 10.4a2.6 2.6 0 0 1-2.6-2.6c0-1.6.9-3.3 2.6-5.2z"/><rect x="8.5" y="12" width="7" height="9.4" rx="1.4"/><path d="M8.5 15.4h7"/></svg>
+                Thắp hương tri ân
+              </button>
+              <button class="m-btn" type="button">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M12 12v6M9.5 15.5 12 18l2.5-2.5"/></svg>
+                Tải hồ sơ PDF
+              </button>
+              <button class="m-btn" type="button">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V3h12v6"/><rect x="6" y="14" width="12" height="7"/><path d="M6 18H4a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-2"/><path d="M17 13h.01"/></svg>
+                In hồ sơ
+              </button>
+              <button class="m-btn" type="button">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 10.5l6.8-4M8.6 13.5l6.8 4"/></svg>
+                Chia sẻ
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Liet si lien quan -->
+        <section class="m-panel">
+          <div class="m-panel-head">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 20v-1.5A4.5 4.5 0 0 1 8 14h2a4.5 4.5 0 0 1 4.5 4.5V20"/><path d="M16 8.2A3 3 0 0 1 16 14M20.5 20v-1.4a3.6 3.6 0 0 0-2.7-3.5"/></svg>
+            <span class="t">Liệt sĩ liên quan</span>
+          </div>
+          <div class="m-panel-body">
+
+            <div class="m-group">
+              <div class="m-group-title"><span class="dot"></span> Liệt sĩ cùng quê <span class="count">3</span></div>
+              <div class="m-person">
+                <span class="m-avatar" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8.5" r="3.6"/><path d="M5 20v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1"/></svg></span>
+                <div class="info">
+                  <div class="pname">Đoàn Đình Tròn</div>
+                  <div class="pmeta">Năm sinh: <b>1944</b> · Đơn vị: <b>C14</b></div>
+                  <div class="phome">Quảng Xương, Thanh Hóa</div>
+                </div>
+              </div>
+              <div class="m-person">
+                <span class="m-avatar" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8.5" r="3.6"/><path d="M5 20v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1"/></svg></span>
+                <div class="info">
+                  <div class="pname">Nguyễn Văn Trộng</div>
+                  <div class="pmeta">Năm sinh: <b>1945</b> · Đơn vị: <b>C3D3</b></div>
+                  <div class="phome">Quảng Xương, Thanh Hóa</div>
+                </div>
+              </div>
+              <div class="m-person">
+                <span class="m-avatar" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8.5" r="3.6"/><path d="M5 20v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1"/></svg></span>
+                <div class="info">
+                  <div class="pname">Lê Đình Sâm</div>
+                  <div class="pmeta">Năm sinh: <b>1944</b> · Đơn vị: <b>C3D3</b></div>
+                  <div class="phome">Quảng Xương, Thanh Hóa</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="m-group">
+              <div class="m-group-title"><span class="dot"></span> Liệt sĩ cùng đơn vị (C14) <span class="count">3</span></div>
+              <div class="m-person">
+                <span class="m-avatar" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8.5" r="3.6"/><path d="M5 20v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1"/></svg></span>
+                <div class="info">
+                  <div class="pname">Đoàn Đình Tròn</div>
+                  <div class="pmeta">Năm sinh: <b>1944</b> · Đơn vị: <b>C14</b></div>
+                  <div class="phome">Quảng Xương, Thanh Hóa</div>
+                </div>
+              </div>
+              <div class="m-person">
+                <span class="m-avatar" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8.5" r="3.6"/><path d="M5 20v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1"/></svg></span>
+                <div class="info">
+                  <div class="pname">Trần Văn Thọ</div>
+                  <div class="pmeta">Năm sinh: <b>1944</b> · Đơn vị: <b>C14</b></div>
+                  <div class="phome">Đô Lương, Nghệ An</div>
+                </div>
+              </div>
+              <div class="m-person">
+                <span class="m-avatar" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8.5" r="3.6"/><path d="M5 20v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1"/></svg></span>
+                <div class="info">
+                  <div class="pname">Đỗ Trọng Nguyên</div>
+                  <div class="pmeta">Năm sinh: <b>1940</b> · Đơn vị: <b>C14</b></div>
+                  <div class="phome">Kim Bảng, Nam Hà</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="m-group">
+              <div class="m-group-title"><span class="dot"></span> Hi sinh trong khoảng 1 tuần <span class="count">0</span></div>
+              <div class="m-empty">Chưa có hồ sơ phù hợp</div>
+            </div>
+
+          </div>
+        </section>
+      </aside>
+
+    </div>
+  </div>
+</div>
