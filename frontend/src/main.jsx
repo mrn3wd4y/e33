@@ -123,6 +123,23 @@ function sameHometown(a, b) {
   return compact(a.province) && a.province === b.province;
 }
 
+function personIdentityKey(record) {
+  return [
+    stripMarks(record.full_name),
+    compact(record.birth_year || record.birth_year_raw),
+    stripMarks(record.hometown_raw),
+    stripMarks(normalizeUnitForDisplay(record.unit)),
+    compact(record.death_year || record.death_date_raw),
+  ].join('|');
+}
+
+function isSamePerson(a, b) {
+  if (a.slug && b.slug && a.slug === b.slug) return true;
+  const aKey = personIdentityKey(a);
+  const bKey = personIdentityKey(b);
+  return aKey.replace(/\|/g, '') && aKey === bKey;
+}
+
 function shortPlace(record) {
   return [record.district, record.province].filter(Boolean).join(', ') || printable(record.hometown_raw);
 }
@@ -745,7 +762,7 @@ function RecordRow({ index, record, onOpen }) {
 
 function DetailPage({ record, records }) {
   const related = useMemo(() => {
-    const others = records.filter((item) => item.slug !== record.slug);
+    const others = records.filter((item) => !isSamePerson(record, item));
     const sameHome = others.filter((item) => sameHometown(record, item)).slice(0, 8);
     const sameUnit = compact(record._unitKey)
       ? others.filter((item) => item._unitKey === record._unitKey).slice(0, 8)
@@ -776,7 +793,7 @@ function DetailPage({ record, records }) {
               <h2>{record.full_name}</h2>
               <div className="detailSummary">
                 <span><b>◷</b> Năm sinh: {printable(record.birth_year_raw || record.birth_year)}</span>
-                <span><b>★</b> Hi sinh: {printable(record.death_date_raw || record.death_year)}</span>
+                <span><b>★</b> Hy sinh: {printable(record.death_date_raw || record.death_year)}</span>
                 <span><b>▣</b> Đơn vị: {unitLabel}</span>
               </div>
             </div>
@@ -795,8 +812,8 @@ function DetailPage({ record, records }) {
               <Info label="QUÊ QUÁN" value={record.hometown_raw} />
               <Info label="NHẬP NGŨ" value={record.enlistment_date_raw} />
               <Info label="ĐƠN VỊ" value={record._unitDisplay} />
-              <Info label="NGÀY HI SINH" value={record.death_date_raw || record.death_year} />
-              <Info label="NƠI HI SINH" value={record.initial_burial_place} />
+              <Info label="NGÀY HY SINH" value={record.death_date_raw || record.death_year} />
+              <Info label="NƠI HY SINH" value={record.initial_burial_place} />
               <Info label="NƠI QUY TẬP BAN ĐẦU" value={record.initial_collection_place} />
               <Info label="NƠI AN TÁNG HIỆN NAY" value={record.current_burial_place} />
               <Info label="GHI CHÚ" value={record.notes_public} />
@@ -815,7 +832,7 @@ function DetailPage({ record, records }) {
           <div className="relatedGroupTitle">LIỆT SĨ LIÊN QUAN</div>
           <RelatedSection title="Liệt sĩ cùng quê" records={related.sameHome} />
           <RelatedSection title={`Liệt sĩ cùng đơn vị (${unitLabel})`} records={related.sameUnit} />
-          <RelatedSection title="Hi sinh trong khoảng 1 tuần" records={related.sameTime} />
+          <RelatedSection title="Hy sinh trong khoảng 1 tuần" records={related.sameTime} />
         </aside>
       </section>
     </>
